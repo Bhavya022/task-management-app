@@ -53,23 +53,27 @@ const App = () => {
   }, [tasks, searchTerm, statusFilter, priorityFilter]);
 
   const calculateROI = (revenue, timeTaken) => {
-    if (timeTaken === 0 || isNaN(revenue) || isNaN(timeTaken)) return 0;
-    return (revenue / timeTaken).toFixed(2);
+    const rev = parseFloat(revenue);
+    const time = parseFloat(timeTaken);
+    if (time === 0 || isNaN(rev) || isNaN(time) || rev === '' || time === '') return '—';
+    return (rev / time).toFixed(2);
   };
 
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
-    const roiA = parseFloat(calculateROI(a.revenue, a.timeTaken));
-    const roiB = parseFloat(calculateROI(b.revenue, b.timeTaken));
-    if (roiA !== roiB) return roiB - roiA;
+  const sortedTasks = React.useMemo(() => {
+    return [...filteredTasks].sort((a, b) => {
+      const roiA = parseFloat(calculateROI(a.revenue, a.timeTaken)) || 0;
+      const roiB = parseFloat(calculateROI(b.revenue, b.timeTaken)) || 0;
+      if (roiA !== roiB) return roiB - roiA;
 
-    const priorityOrder = { High: 3, Medium: 2, Low: 1 };
-    const priA = priorityOrder[a.priority];
-    const priB = priorityOrder[b.priority];
-    if (priA !== priB) return priB - priA;
+      const priorityOrder = { High: 3, Medium: 2, Low: 1 };
+      const priA = priorityOrder[a.priority];
+      const priB = priorityOrder[b.priority];
+      if (priA !== priB) return priB - priA;
 
-    // Stable tie-breaker: alphabetical title
-    return a.title.localeCompare(b.title);
-  });
+      // Stable tie-breaker: createdAt descending (newest first)
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+  }, [filteredTasks]);
 
   const handleAddTask = () => {
     const newTask = {
@@ -216,10 +220,10 @@ const App = () => {
       headerName: 'Actions',
       width: 200,
       renderCell: (params) => (
-        <Box>
-          <IconButton onClick={() => handleOpenView(params.row)}><Visibility /></IconButton>
-          <IconButton onClick={() => handleOpenEdit(params.row)}><Edit /></IconButton>
-          <IconButton onClick={() => handleOpenDelete(params.row)}><Delete /></IconButton>
+        <Box onClick={(e) => e.stopPropagation()}>
+          <IconButton onClick={(e) => { e.stopPropagation(); handleOpenView(params.row); }}><Visibility /></IconButton>
+          <IconButton onClick={(e) => { e.stopPropagation(); handleOpenEdit(params.row); }}><Edit /></IconButton>
+          <IconButton onClick={(e) => { e.stopPropagation(); handleOpenDelete(params.row); }}><Delete /></IconButton>
         </Box>
       )
     }
@@ -300,6 +304,7 @@ const App = () => {
           pageSize={5}
           rowsPerPageOptions={[5]}
           disableSelectionOnClick
+          onRowClick={(params) => handleOpenView(params.row)}
         />
       </Paper>
 
