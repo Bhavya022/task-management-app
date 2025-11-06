@@ -26,12 +26,12 @@ const App = () => {
     status: 'Pending'
   });
 
-  const loaded = useRef(false);
+  const [loaded, setLoaded] = useState(false);
 
   // Load tasks from localStorage on mount
   useEffect(() => {
-    if (!loaded.current) {
-      loaded.current = true;
+    if (!loaded) {
+      setLoaded(true);
       console.log('Loading tasks from localStorage');
       const storedTasks = localStorage.getItem('tasks');
       if (storedTasks) {
@@ -40,7 +40,7 @@ const App = () => {
         setFilteredTasks(parsedTasks);
       }
     }
-  }, []);
+  }, [loaded]);
 
   // Save tasks to localStorage whenever tasks change
   useEffect(() => {
@@ -57,13 +57,7 @@ const App = () => {
     setFilteredTasks(filtered);
   }, [tasks, searchTerm, statusFilter, priorityFilter]);
 
-  // Reset lastDeletedTask when snackbar closes
-  useEffect(() => {
-    if (!snackbarOpen) {
-      setLastDeletedTask(null);
-      setIsDeleted(false);
-    }
-  }, [snackbarOpen]);
+
 
   const calculateROI = (revenue, timeTaken) => {
     const rev = parseFloat(revenue);
