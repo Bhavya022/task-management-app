@@ -30,17 +30,14 @@ const App = () => {
 
   // Load tasks from localStorage on mount
   useEffect(() => {
-    if (!loaded) {
-      setLoaded(true);
-      console.log('Loading tasks from localStorage');
-      const storedTasks = localStorage.getItem('tasks');
-      if (storedTasks) {
-        const parsedTasks = JSON.parse(storedTasks);
-        setTasks(parsedTasks);
-        setFilteredTasks(parsedTasks);
-      }
+    const storedTasks = localStorage.getItem('tasks');
+    if (storedTasks) {
+      const parsedTasks = JSON.parse(storedTasks);
+      setTasks(parsedTasks);
+      setFilteredTasks(parsedTasks);
     }
-  }, [loaded]);
+    setLoaded(true);
+  }, []);
 
   // Save tasks to localStorage whenever tasks change
   useEffect(() => {
@@ -62,8 +59,7 @@ const App = () => {
   const calculateROI = (revenue, timeTaken) => {
     const rev = parseFloat(revenue);
     const time = parseFloat(timeTaken);
-    if (isNaN(rev) || isNaN(time) || rev === '' || time === '') return '—';
-    if (time === 0) return '—';
+    if (isNaN(rev) || isNaN(time) || rev === '' || time === '' || time === 0) return '—';
     return (rev / time).toFixed(2);
   };
 
@@ -131,7 +127,10 @@ const App = () => {
     }
   };
 
-  const handleCloseSnackbar = () => {
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
     setSnackbarOpen(false);
     setLastDeletedTask(null);
     setIsDeleted(false);
@@ -232,8 +231,8 @@ const App = () => {
       width: 200,
       renderCell: (params) => (
         <>
-          <IconButton onClick={(e) => { e.stopPropagation(); handleOpenEdit(params.row); }}><Edit /></IconButton>
-          <IconButton onClick={(e) => { e.stopPropagation(); handleOpenDelete(params.row); }}><Delete /></IconButton>
+          <IconButton onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleOpenEdit(params.row); }}><Edit /></IconButton>
+          <IconButton onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleOpenDelete(params.row); }}><Delete /></IconButton>
         </>
       )
     }
