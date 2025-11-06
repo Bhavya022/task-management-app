@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Container, Typography, Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert, Paper, Grid, Box, IconButton, Select, MenuItem, FormControl, InputLabel, Chip } from '@mui/material';
-import { Add, Edit, Delete, Visibility, Undo, Search, FilterList, GetApp, Publish } from '@mui/icons-material';
+import { Add, Edit, Delete, Undo, Search, FilterList, GetApp, Publish } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 
 const App = () => {
@@ -26,14 +26,19 @@ const App = () => {
     status: 'Pending'
   });
 
+  const loaded = useRef(false);
+
   // Load tasks from localStorage on mount
   useEffect(() => {
-    console.log('Loading tasks from localStorage');
-    const storedTasks = localStorage.getItem('tasks');
-    if (storedTasks) {
-      const parsedTasks = JSON.parse(storedTasks);
-      setTasks(parsedTasks);
-      setFilteredTasks(parsedTasks);
+    if (!loaded.current) {
+      loaded.current = true;
+      console.log('Loading tasks from localStorage');
+      const storedTasks = localStorage.getItem('tasks');
+      if (storedTasks) {
+        const parsedTasks = JSON.parse(storedTasks);
+        setTasks(parsedTasks);
+        setFilteredTasks(parsedTasks);
+      }
     }
   }, []);
 
@@ -52,10 +57,19 @@ const App = () => {
     setFilteredTasks(filtered);
   }, [tasks, searchTerm, statusFilter, priorityFilter]);
 
+  // Reset lastDeletedTask when snackbar closes
+  useEffect(() => {
+    if (!snackbarOpen) {
+      setLastDeletedTask(null);
+      setIsDeleted(false);
+    }
+  }, [snackbarOpen]);
+
   const calculateROI = (revenue, timeTaken) => {
     const rev = parseFloat(revenue);
     const time = parseFloat(timeTaken);
-    if (time === 0 || isNaN(rev) || isNaN(time) || rev === '' || time === '') return '—';
+    if (isNaN(rev) || isNaN(time) || rev === '' || time === '') return '—';
+    if (time === 0) return '—';
     return (rev / time).toFixed(2);
   };
 
@@ -71,7 +85,9 @@ const App = () => {
       if (priA !== priB) return priB - priA;
 
       // Stable tie-breaker: createdAt descending (newest first)
-      return new Date(b.createdAt) - new Date(a.createdAt);
+      const dateDiff = new Date(b.createdAt) - new Date(a.createdAt);
+      if (dateDiff !== 0) return dateDiff;
+      return a.title.localeCompare(b.title);
     });
   }, [filteredTasks]);
 
@@ -204,15 +220,16 @@ const App = () => {
 
   const totalRevenue = tasks.reduce((sum, task) => sum + task.revenue, 0);
   const totalTime = tasks.reduce((sum, task) => sum + task.timeTaken, 0);
-  const averageROI = totalTime > 0 ? (totalRevenue / totalTime).toFixed(2) : 0;
-  const efficiency = totalRevenue > 0 ? ((totalRevenue / totalTime) * 100).toFixed(2) : 0;
-  const performanceGrade = averageROI > 10 ? 'Excellent' : averageROI > 5 ? 'Good' : 'Needs Improvement';
+  const avg = totalTime > 0 ? parseFloat((totalRevenue / totalTime).toFixed(2)) : null;
+  const averageROI = avg !== null ? avg.toFixed(2) : '—';
+  const efficiency = avg !== null ? (avg * 100).toFixed(2) : '—';
+  const performanceGrade = avg !== null ? (avg > 10 ? 'Excellent' : avg > 5 ? 'Good' : 'Needs Improvement') : 'No Data';
 
   const columns = [
     { field: 'title', headerName: 'Title', width: 200 },
     { field: 'revenue', headerName: 'Revenue', width: 120, type: 'number' },
     { field: 'timeTaken', headerName: 'Time Taken', width: 120, type: 'number' },
-    { field: 'roi', headerName: 'ROI', width: 100, type: 'number' },
+    { field: 'roi', headerName: 'ROI', width: 100 },
     { field: 'priority', headerName: 'Priority', width: 100, renderCell: (params) => <Chip label={params.value} color={params.value === 'High' ? 'error' : params.value === 'Medium' ? 'warning' : 'success'} /> },
     { field: 'status', headerName: 'Status', width: 100, renderCell: (params) => <Chip label={params.value} color={params.value === 'Completed' ? 'success' : params.value === 'In Progress' ? 'warning' : 'default'} /> },
     {
@@ -220,11 +237,10 @@ const App = () => {
       headerName: 'Actions',
       width: 200,
       renderCell: (params) => (
-        <Box onClick={(e) => e.stopPropagation()}>
-          <IconButton onClick={(e) => { e.stopPropagation(); handleOpenView(params.row); }}><Visibility /></IconButton>
+        <>
           <IconButton onClick={(e) => { e.stopPropagation(); handleOpenEdit(params.row); }}><Edit /></IconButton>
           <IconButton onClick={(e) => { e.stopPropagation(); handleOpenDelete(params.row); }}><Delete /></IconButton>
-        </Box>
+        </>
       )
     }
   ];
