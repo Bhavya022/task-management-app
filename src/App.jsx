@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Container, Typography, Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert, Paper, Grid, Box, IconButton, Select, MenuItem, FormControl, InputLabel, Chip, ThemeProvider, createTheme, Tabs, Tab, Badge, Divider, List, ListItem, ListItemText, ListItemIcon, Accordion, AccordionSummary, AccordionDetails, Autocomplete } from '@mui/material';
 import { Add, Edit, Delete, Undo, Search, FilterList, GetApp, Publish, Brightness4, Brightness7, PlayArrow, Stop, DateRange, Label, Category, Schedule, ExpandMore, Notifications, NotificationsActive, Save, BarChart, PieChart, TrendingUp, Link, LinkOff } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Cell, BarChart as RechartsBarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, BarChart as RechartsBarChart, Bar } from 'recharts';
 
 const getTheme = (darkMode) => createTheme({
   palette: {
